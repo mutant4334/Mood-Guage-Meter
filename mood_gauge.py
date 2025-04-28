@@ -1,3 +1,4 @@
+# mood_gauge_with_emojis.py
 
 import streamlit as st
 import pandas as pd
@@ -5,7 +6,8 @@ import plotly.graph_objects as go
 
 # --- Mood Settings ---
 
-mood_labels = ["😡 Angry", "😞 Sad", "😐 Neutral", "😊 Happy", "🤩 Excited"]
+mood_emojis = ["😡", "😞", "😐", "😊", "🤩"]  # Emojis for the moods
+mood_labels = ["Angry", "Sad", "Neutral", "Happy", "Excited"]  # Text labels (hidden)
 mood_angles = [0, 45, 90, 135, 180]  # Degrees on semi-circle
 
 mood_to_angle = dict(zip(mood_labels, mood_angles))
@@ -19,7 +21,7 @@ if 'responses' not in st.session_state:
 
 st.set_page_config(page_title="Mood Gauge Survey", page_icon="😊", layout="centered")
 
-st.title("🌈 Mood Survey (with Speedometer!)")
+st.title("Mood Survey (with Speedometer!)")
 st.write("Tell us how you're feeling today!")
 
 # Input Form
@@ -41,7 +43,7 @@ if submit:
     st.session_state.responses.append(new_response)
     st.success("✅ Thank you! Your response has been recorded.")
 
-# --- Show Mood Gauge (Speedometer) ---
+# --- Show Mood Gauge (Speedometer) with Emojis ---
 
 if st.session_state.responses:
     latest_mood = st.session_state.responses[-1]['Mood']
@@ -50,13 +52,13 @@ if st.session_state.responses:
     # Create figure
     fig = go.Figure()
 
-    # Add semicircular gauge
+    # Add semicircular gauge with emojis
     fig.add_trace(go.Pie(
         values=[20, 20, 20, 20, 20, 100],
         rotation=90,
         hole=0.5,
         marker_colors=['red', 'orange', 'gray', 'lightgreen', 'green', 'white'],
-        text=mood_labels + [''],
+        text=mood_emojis + [''],  # Emojis here
         textinfo='label',
         hoverinfo='none',
         direction='clockwise',
