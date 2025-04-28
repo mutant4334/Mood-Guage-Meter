@@ -1,90 +1,75 @@
 import streamlit as st
 import plotly.graph_objects as go
-from datetime import datetime
 import pandas as pd
 import os
+from datetime import datetime
 
 st.set_page_config(layout="wide")
 st.title("😃 Mood Survey - Speedometer Style")
 
-# Mood options with corresponding values
+# Mood options with values
 moods = {
-    "Very Sad 😞": 0,
-    "Sad 🙁": 25,
+    "Very Sad 😞": 10,
+    "Sad 🙁": 30,
     "Neutral 😐": 50,
-    "Happy 🙂": 75,
-    "Very Happy 😃": 100
+    "Happy 🙂": 70,
+    "Very Happy 😃": 90
 }
 
-# Mood ranges and colors
-steps = [
-    {'range': [0, 20], 'color': '#ff4b4b'},
-    {'range': [20, 40], 'color': '#ffa500'},
-    {'range': [40, 60], 'color': '#ffff00'},
-    {'range': [60, 80], 'color': '#90ee90'},
-    {'range': [80, 100], 'color': '#32CD32'}
-]
+# Create the gauge chart
+def create_speedometer(value, label):
+    fig = go.Figure()
 
-# Function to create the speedometer
-def create_speedometer(value, mood_label):
-    fig = go.Figure(go.Indicator(
-        mode = "gauge+number",
-        value = value,
-        title = {'text': f"<b>{mood_label}</b>", 'font': {'size': 30}},
-        gauge = {
-            'axis': {'range': [0, 100], 'startangle': -90, 'endangle': 90},
-            'bar': {'color': "black", 'thickness': 0.25},
+    fig.add_trace(go.Indicator(
+        mode="gauge+number+delta",
+        value=value,
+        gauge={
+            'shape': "semi",
+            'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
+            'bar': {'color': "black", 'thickness': 0.3},
             'bgcolor': "white",
             'borderwidth': 2,
             'bordercolor': "gray",
-            'steps': steps,
+            'steps': [
+                {'range': [0, 20], 'color': '#FF4B4B'},
+                {'range': [20, 40], 'color': '#FFA500'},
+                {'range': [40, 60], 'color': '#FFFF00'},
+                {'range': [60, 80], 'color': '#90EE90'},
+                {'range': [80, 100], 'color': '#32CD32'}
+            ],
             'threshold': {
-                'line': {'color': "black", 'width': 8},
-                'thickness': 0.75,
+                'line': {'color': "black", 'width': 6},
+                'thickness': 0.8,
                 'value': value
             }
-        }
+        },
+        title={'text': label, 'font': {'size': 24}}
     ))
 
     fig.update_layout(
-        margin=dict(t=20, b=0, l=0, r=0),
+        margin={'t': 0, 'b': 0, 'l': 0, 'r': 0},
         paper_bgcolor="white",
         height=400
     )
 
     return fig
 
-# Celebration animation
-def celebrate_mood():
-    st.success("🎉 Mood submitted successfully! 🎉")
-    st.snow()
-    st.markdown(
-        "<div style='text-align: center; font-size:30px; color:green;'>🎊 Thank you for sharing your mood! 🎊</div>",
-        unsafe_allow_html=True
-    )
-
-# Input name
+# Input fields
 name = st.text_input("Enter your name:")
 
-# Mood selection
 selected_mood = st.radio("How are you feeling today?", list(moods.keys()))
 
-# Show speedometer
 if selected_mood:
     mood_value = moods[selected_mood]
     mood_label = selected_mood.split()[0]
-    
-    if mood_label == "Very":
-        mood_label = selected_mood.split()[1]
-    
     fig = create_speedometer(mood_value, mood_label)
     st.plotly_chart(fig, use_container_width=True)
 
-# Submit mood
 if st.button("Submit Mood"):
     if name.strip() == "":
         st.error("⚠️ Please enter your name before submitting.")
     else:
+        # Save to Excel
         data = {
             "Timestamp": [datetime.now()],
             "Name": [name.strip()],
@@ -101,4 +86,6 @@ if st.button("Submit Mood"):
 
         final_df.to_excel("mood_responses_speedometer.xlsx", index=False)
 
-        celebrate_mood()
+        # Success animation
+        st.success("🎉 Mood submitted successfully! 🎉")
+        st.balloons()
