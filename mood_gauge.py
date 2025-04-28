@@ -5,7 +5,7 @@ from datetime import datetime
 import os
 
 # Title
-st.title("😃 Mood Survey)")
+st.title("😃 Mood Survey")
 
 # Mood options with Likert scale values
 moods = {
@@ -16,14 +16,27 @@ moods = {
     "Very Happy 😃": 5
 }
 
-# Create 3D-like gauge chart based on Likert scale
+# Create a 3D-like gauge chart based on Likert scale
 def create_gauge(selected_value, selected_mood_text):
     fig = go.Figure(go.Indicator(
-        mode="gauge+number+delta",
+        mode="gauge+number",
         value=selected_value,
-        number={'valueformat': '', 'font': {'size': 30}, 'prefix': f"{selected_mood_text} "},  # Show Mood Text instead of number
+        number={
+            'font': {'size': 40},
+            'valueformat': '',
+            'prefix': '',  
+            'suffix': '',
+            'font': {'color': 'black', 'size': 40},
+            'text': selected_mood_text  # Set mood name in center
+        },
         gauge={
-            'axis': {'range': [1, 5], 'tickvals': [1, 2, 3, 4, 5], 'ticktext': ["Very Sad", "Sad", "Neutral", "Happy", "Very Happy"], 'tickwidth': 2, 'tickcolor': "darkblue"},
+            'axis': {
+                'range': [1, 5],
+                'tickvals': [1, 2, 3, 4, 5],
+                'ticktext': ["Very Sad", "Sad", "Neutral", "Happy", "Very Happy"],
+                'tickwidth': 2,
+                'tickcolor': "darkblue"
+            },
             'borderwidth': 4,
             'bordercolor': "gray",
             'bar': {'color': "black", 'thickness': 0.2},
@@ -52,6 +65,18 @@ def create_gauge(selected_value, selected_mood_text):
     )
     return fig
 
+# Custom celebration animation
+def celebrate_mood():
+    st.success("🎉 Mood submitted successfully! 🎉")
+    st.snow()  # prettier animation than balloons
+    st.markdown(
+        """
+        <div style='text-align: center; font-size:30px; color:green;'>
+            🎊 Thank you for sharing your mood! 🎊
+        </div>
+        """, unsafe_allow_html=True
+    )
+
 # Input Name
 name = st.text_input("Enter your name:", "")
 
@@ -61,13 +86,14 @@ selected_mood = st.radio("How are you feeling today?", list(moods.keys()))
 # Display gauge only if mood is selected
 if selected_mood:
     selected_value = moods[selected_mood]
-    selected_mood_text = selected_mood.split()[0]  # Only the mood word (e.g., "Happy", "Sad")
+    # Get mood text properly
+    selected_mood_text = selected_mood.split(' ')[0]  # Extract first word like "Happy"
     st.plotly_chart(create_gauge(selected_value, selected_mood_text), use_container_width=True)
 
 # Submit Button
 if st.button("Submit Mood"):
     if name.strip() == "":
-        st.error("Please enter your name before submitting.")
+        st.error("⚠️ Please enter your name before submitting.")
     else:
         # Save response
         data = {
@@ -87,5 +113,4 @@ if st.button("Submit Mood"):
 
         final_df.to_excel("mood_responses.xlsx", index=False)
 
-        st.success(f"Thank you {name.strip()}! Your mood '{selected_mood}' has been recorded! 🎯")
-        st.balloons()  # 🎈 Little animation for success
+        celebrate_mood()
