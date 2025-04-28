@@ -1,4 +1,4 @@
-# mood_gauge_with_emojis.py
+# mood_gauge_with_animation.py
 
 import streamlit as st
 import pandas as pd
@@ -21,7 +21,7 @@ if 'responses' not in st.session_state:
 
 st.set_page_config(page_title="Mood Gauge Survey", page_icon="😊", layout="centered")
 
-st.title("Mood Survey (with Speedometer!)")
+st.title("🌈 Mood Survey (with Speedometer!)")
 st.write("Tell us how you're feeling today!")
 
 # Input Form
@@ -79,27 +79,49 @@ if st.session_state.responses:
         )
     )
 
-    # Customize layout
+    # Define animation frames
+    frames = []
+    for i in range(5):  # One for each mood
+        angle_frame = mood_to_angle[mood_labels[i]]
+        frames.append(go.layout.Frame(
+            data=[go.Scatter(
+                x=[0.5 + 0.4 * pd.np.cos(pd.np.deg2rad(180 - angle_frame))],
+                y=[0.5 + 0.4 * pd.np.sin(pd.np.deg2rad(180 - angle_frame))],
+                mode='markers+text',
+                marker=dict(symbol="arrow-bar-up", size=15, angleref="paper"),
+            )],
+            name=f"Frame_{i}",
+        ))
+
+    # Add frames and layout
+    fig.frames = frames
     fig.update_layout(
         margin=dict(l=0, r=0, b=0, t=0),
         paper_bgcolor="white",
-        annotations=[
-            dict(
-                x=0.5 + 0.4 * pd.np.cos(pd.np.deg2rad(180 - angle)),
-                y=0.5 + 0.4 * pd.np.sin(pd.np.deg2rad(180 - angle)),
-                ax=0.5,
-                ay=0.5,
-                xref="paper",
-                yref="paper",
-                axref="paper",
-                ayref="paper",
-                showarrow=True,
-                arrowhead=2,
-                arrowsize=2,
-                arrowwidth=3,
-                arrowcolor="black"
-            )
-        ],
+        updatemenus=[
+            {
+                'buttons': [
+                    {
+                        'args': [None, {'frame': {'duration': 1000, 'redraw': True}, 'fromcurrent': True}],
+                        'label': 'Play',
+                        'method': 'animate'
+                    },
+                    {
+                        'args': [[None], {'frame': {'duration': 0, 'redraw': False}, 'mode': 'immediate'}],
+                        'label': 'Pause',
+                        'method': 'animate'
+                    }
+                ],
+                'direction': 'left',
+                'pad': {'r': 10, 't': 87},
+                'showactive': False,
+                'type': 'buttons',
+                'x': 0.1,
+                'xanchor': 'right',
+                'y': 0,
+                'yanchor': 'top',
+            }
+        ]
     )
 
     st.plotly_chart(fig, use_container_width=True)
