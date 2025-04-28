@@ -17,17 +17,13 @@ moods = {
 }
 
 # Create a 3D-like gauge chart based on Likert scale
-def create_gauge(selected_value, selected_mood_text):
+def create_gauge(selected_value):
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=selected_value,
         number={
-            'font': {'size': 40},
-            'valueformat': '',
-            'prefix': '',  
-            'suffix': '',
-            'font': {'color': 'black', 'size': 40},
-            'text': selected_mood_text  # Set mood name in center
+            'font': {'size': 30, 'color': 'black'},
+            'suffix': ""  # Remove unwanted suffix
         },
         gauge={
             'axis': {
@@ -68,7 +64,7 @@ def create_gauge(selected_value, selected_mood_text):
 # Custom celebration animation
 def celebrate_mood():
     st.success("🎉 Mood submitted successfully! 🎉")
-    st.snow()  # prettier animation than balloons
+    st.snow()  # Beautiful snow animation
     st.markdown(
         """
         <div style='text-align: center; font-size:30px; color:green;'>
@@ -86,9 +82,15 @@ selected_mood = st.radio("How are you feeling today?", list(moods.keys()))
 # Display gauge only if mood is selected
 if selected_mood:
     selected_value = moods[selected_mood]
-    # Get mood text properly
-    selected_mood_text = selected_mood.split(' ')[0]  # Extract first word like "Happy"
-    st.plotly_chart(create_gauge(selected_value, selected_mood_text), use_container_width=True)
+    mood_label = selected_mood.split(' ')[0]  # Get the first word like "Happy"
+    
+    # Mood Label nicely at top
+    st.markdown(
+        f"<h2 style='text-align: center; color: #4CAF50;'>{mood_label}</h2>",
+        unsafe_allow_html=True
+    )
+
+    st.plotly_chart(create_gauge(selected_value), use_container_width=True)
 
 # Submit Button
 if st.button("Submit Mood"):
