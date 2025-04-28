@@ -6,74 +6,51 @@ import os
 from datetime import datetime
 
 st.set_page_config(layout="wide")
-st.title("😃 Mood Survey - Full Circular Speedometer with Mood Labels")
+st.title("😃 Mood Survey - Full Circular Speedometer")
 
-# Define moods with corresponding gauge angles and colors
+# Define moods with corresponding gauge values
 moods = {
-    "Very Sad 😞": (10, "#FF4B4B"),
-    "Sad 🙁": (30, "#FFA500"),
-    "Neutral 😐": (50, "#FFFF00"),
-    "Happy 🙂": (70, "#90EE90"),
-    "Very Happy 😃": (90, "#32CD32")
+    "Very Sad": 10,
+    "Sad": 30,
+    "Neutral": 50,
+    "Happy": 70,
+    "Very Happy": 90
 }
 
+colors = ['#FF4B4B', '#FFA500', '#FFFF00', '#90EE90', '#32CD32']
+
 # Function to create full circular gauge
-def create_full_gauge(value, mood_label, full_mood_name):
+def create_full_gauge(value, mood_label):
+    # Create base pie chart for gauge background
     fig = go.Figure()
 
-    # Add pie slices with mood labels inside
     fig.add_trace(go.Pie(
-        values=[20]*5,  # Equal sections
+        values=[20, 20, 20, 20, 20],  # 5 sections
         hole=0.5,
         direction="clockwise",
         sort=False,
-        marker_colors=[moods[m][1] for m in moods],
-        text=[m for m in moods.keys()],
-        textinfo='text',
-        textposition='inside',
-        insidetextorientation='radial',
-        font=dict(size=14, color="black")
+        marker_colors=colors,
+        textinfo='none'
     ))
 
-    # Calculate needle angle
+    # Calculate the angle for the needle
     angle = (value / 100) * 360
 
-    # Needle shaft
-    fig.add_shape(
-        type='line',
-        x0=0.5,
-        y0=0.5,
-        x1=0.5 + 0.35 * np.cos(np.radians(angle - 90)),
-        y1=0.5 + 0.35 * np.sin(np.radians(angle - 90)),
-        line=dict(color='black', width=6)
-    )
-
-    # Arrowhead triangle
-    fig.add_shape(
-        type="path",
-        path=f'M {0.5 + 0.35 * np.cos(np.radians(angle - 90))} {0.5 + 0.35 * np.sin(np.radians(angle - 90))} '
-             f'L {0.5 + 0.32 * np.cos(np.radians(angle - 90) + 0.1)} {0.5 + 0.32 * np.sin(np.radians(angle - 90) + 0.1)} '
-             f'L {0.5 + 0.32 * np.cos(np.radians(angle - 90) - 0.1)} {0.5 + 0.32 * np.sin(np.radians(angle - 90) - 0.1)} Z',
-        fillcolor="black",
-        line_color="black"
-    )
-
-    # Center circle
-    fig.add_shape(
-        type="circle",
-        x0=0.48, y0=0.48,
-        x1=0.52, y1=0.52,
-        fillcolor="black",
-        line_color="black"
-    )
+    # Needle
+    fig.add_shape(type='line',
+                  x0=0.5,
+                  y0=0.5,
+                  x1=0.5 + 0.4 * np.cos(np.radians(angle - 90)),
+                  y1=0.5 + 0.4 * np.sin(np.radians(angle - 90)),
+                  line=dict(color='black', width=4))
 
     # Update layout
     fig.update_layout(
         showlegend=False,
         margin=dict(l=0, r=0, t=0, b=0),
-        height=550,
+        height=500,
         paper_bgcolor="lightgray",
-        annotations=[dict(text=f"<b>{full_mood_name}</b>", x=0.5, y=0.5, font_size=20, showarrow=False)]
+        annotations=[dict(text=f"<b>{mood_label}</b>", x=0.5, y=0.5, font_size=20, showarrow=False)]
     )
 
     return fig
@@ -85,16 +62,15 @@ if name.strip() != "":
     selected_mood = st.radio("How are you feeling today?", list(moods.keys()))
     
     if selected_mood:
-        mood_value, mood_color = moods[selected_mood]
-        fig = create_full_gauge(mood_value, selected_mood.split()[0], selected_mood)
+        mood_value = moods[selected_mood]
+        fig = create_full_gauge(mood_value, selected_mood)
         st.plotly_chart(fig, use_container_width=True)
 
     if st.button("Submit Mood"):
         df = pd.DataFrame({
             "Timestamp": [datetime.now()],
             "Name": [name.strip()],
-            "Mood": [selected_mood],
-            "Emoji": [selected_mood.split()[-1]]
+            "Mood": [selected_mood]
         })
 
         if os.path.exists("mood_data.xlsx"):
