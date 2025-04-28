@@ -5,7 +5,7 @@ from datetime import datetime
 import os
 
 # Title
-st.title("😃 Mood Survey")
+st.title("😃 Mood Survey - Likert Scale (with Custom Gauge)")
 
 # Mood options with Likert scale values
 moods = {
@@ -16,55 +16,43 @@ moods = {
     "Very Happy 😃": 5
 }
 
-# Create a 3D-like gauge chart based on Likert scale
-def create_gauge(selected_value):
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=selected_value,
-        number={
-            'font': {'size': 30, 'color': 'black'},
-            'suffix': ""  # Remove unwanted suffix
-        },
-        gauge={
-            'axis': {
-                'range': [1, 5],
-                'tickvals': [1, 2, 3, 4, 5],
-                'ticktext': ["Very Sad", "Sad", "Neutral", "Happy", "Very Happy"],
-                'tickwidth': 2,
-                'tickcolor': "darkblue"
-            },
-            'borderwidth': 4,
-            'bordercolor': "gray",
-            'bar': {'color': "black", 'thickness': 0.2},
-            'bgcolor': "white",
-            'steps': [
-                {'range': [1, 2], 'color': "#ff4b4b"},
-                {'range': [2, 3], 'color': "#ffa500"},
-                {'range': [3, 4], 'color': "#ffff00"},
-                {'range': [4, 5], 'color': "#90ee90"}
-            ],
-            'threshold': {
-                'line': {'color': "black", 'width': 6},
-                'thickness': 0.8,
-                'value': selected_value
-            }
-        },
-        domain={'x': [0, 1], 'y': [0, 1]}
+colors = ["#ff4b4b", "#ffa500", "#ffff00", "#90ee90", "#32CD32"]  # 5 color blocks
+
+# Create custom semi-circle gauge
+def create_custom_gauge(mood_text, mood_index):
+    fig = go.Figure()
+
+    fig.add_trace(go.Pie(
+        values=[20]*5 + [100],
+        marker_colors=colors + ["lightgray"],
+        hole=0.5,
+        direction="clockwise",
+        sort=False,
+        rotation=180,
+        text=["Very Sad", "Sad", "Neutral", "Happy", "Very Happy", ""],
+        textinfo="none",  # No small texts on blocks
+        hoverinfo="skip",
+        showlegend=False
     ))
 
     fig.update_layout(
-        paper_bgcolor="lightgray",
-        font={'color': "black", 'family': "Arial"},
-        margin=dict(l=50, r=50, t=50, b=50),
+        margin=dict(t=0, b=0, l=0, r=0),
         width=600,
-        height=400
+        height=400,
+        paper_bgcolor="lightgray",
+        annotations=[dict(
+            text=f"<b>{mood_text}</b>",
+            x=0.5, y=0.3,
+            font_size=30,
+            showarrow=False
+        )]
     )
     return fig
 
-# Custom celebration animation
+# Celebration animation
 def celebrate_mood():
     st.success("🎉 Mood submitted successfully! 🎉")
-    st.snow()  # Beautiful snow animation
+    st.snow()
     st.markdown(
         """
         <div style='text-align: center; font-size:30px; color:green;'>
@@ -79,18 +67,17 @@ name = st.text_input("Enter your name:", "")
 # Mood selection
 selected_mood = st.radio("How are you feeling today?", list(moods.keys()))
 
-# Display gauge only if mood is selected
+# Display custom gauge only if mood is selected
 if selected_mood:
-    selected_value = moods[selected_mood]
-    mood_label = selected_mood.split(' ')[0]  # Get the first word like "Happy"
-    
-    # Mood Label nicely at top
-    st.markdown(
-        f"<h2 style='text-align: center; color: #4CAF50;'>{mood_label}</h2>",
-        unsafe_allow_html=True
-    )
+    mood_index = moods[selected_mood]
+    mood_label = selected_mood.split(' ')[0]  # Only the mood word (Very, Sad, etc.)
+    emoji = selected_mood.split(' ')[-1]      # Extract emoji separately
 
-    st.plotly_chart(create_gauge(selected_value), use_container_width=True)
+    # Proper Mood Name for Center (ignore "Very" if any)
+    if mood_label == "Very":
+        mood_label = selected_mood.split(' ')[1]
+
+    st.plotly_chart(create_custom_gauge(mood_label, mood_index), use_container_width=True)
 
 # Submit Button
 if st.button("Submit Mood"):
