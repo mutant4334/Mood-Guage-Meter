@@ -7,85 +7,74 @@ from datetime import datetime
 st.set_page_config(layout="wide")
 st.title("😃 Mood Survey - Speedometer Style")
 
-# Mood options with values
+# Define moods with corresponding gauge values
 moods = {
-    "Very Sad 😞": 10,
-    "Sad 🙁": 30,
-    "Neutral 😐": 50,
-    "Happy 🙂": 70,
-    "Very Happy 😃": 90
+    "Very Sad": 10,
+    "Sad": 30,
+    "Neutral": 50,
+    "Happy": 70,
+    "Very Happy": 90
 }
 
-# Create the gauge chart
-def create_speedometer(value, label):
-    fig = go.Figure()
+colors = ['#FF4B4B', '#FFA500', '#FFFF00', '#90EE90', '#32CD32']
 
-    fig.add_trace(go.Indicator(
-        mode="gauge+number+delta",
+# Function to create gauge
+def create_gauge(value, mood_label):
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
         value=value,
         gauge={
             'shape': "semi",
-            'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
+            'axis': {'range': [0, 100]},
             'bar': {'color': "black", 'thickness': 0.3},
-            'bgcolor': "white",
-            'borderwidth': 2,
-            'bordercolor': "gray",
             'steps': [
-                {'range': [0, 20], 'color': '#FF4B4B'},
-                {'range': [20, 40], 'color': '#FFA500'},
-                {'range': [40, 60], 'color': '#FFFF00'},
-                {'range': [60, 80], 'color': '#90EE90'},
-                {'range': [80, 100], 'color': '#32CD32'}
+                {'range': [0, 20], 'color': colors[0]},
+                {'range': [20, 40], 'color': colors[1]},
+                {'range': [40, 60], 'color': colors[2]},
+                {'range': [60, 80], 'color': colors[3]},
+                {'range': [80, 100], 'color': colors[4]},
             ],
             'threshold': {
-                'line': {'color': "black", 'width': 6},
-                'thickness': 0.8,
+                'line': {'color': "black", 'width': 4},
+                'thickness': 0.75,
                 'value': value
             }
         },
-        title={'text': label, 'font': {'size': 24}}
+        domain={'x': [0, 1], 'y': [0, 1]},
+        title={'text': f"<b>{mood_label}</b>", 'font': {'size': 30}}
     ))
 
     fig.update_layout(
         margin={'t': 0, 'b': 0, 'l': 0, 'r': 0},
-        paper_bgcolor="white",
-        height=400
+        paper_bgcolor="lightgray",
+        height=450
     )
-
     return fig
 
-# Input fields
-name = st.text_input("Enter your name:")
+# --- UI Elements ---
+name = st.text_input("Enter your name")
 
 selected_mood = st.radio("How are you feeling today?", list(moods.keys()))
 
 if selected_mood:
     mood_value = moods[selected_mood]
-    mood_label = selected_mood.split()[0]
-    fig = create_speedometer(mood_value, mood_label)
+    fig = create_gauge(mood_value, selected_mood)
     st.plotly_chart(fig, use_container_width=True)
 
 if st.button("Submit Mood"):
     if name.strip() == "":
         st.error("⚠️ Please enter your name before submitting.")
     else:
-        # Save to Excel
-        data = {
+        df = pd.DataFrame({
             "Timestamp": [datetime.now()],
             "Name": [name.strip()],
-            "Mood": [selected_mood],
-            "Emoji": [selected_mood.split()[-1]]
-        }
-        df = pd.DataFrame(data)
+            "Mood": [selected_mood]
+        })
 
-        if os.path.exists("mood_responses_speedometer.xlsx"):
-            existing_df = pd.read_excel("mood_responses_speedometer.xlsx")
-            final_df = pd.concat([existing_df, df], ignore_index=True)
-        else:
-            final_df = df
+        if os.path.exists("mood_data.xlsx"):
+            old_df = pd.read_excel("mood_data.xlsx")
+            df = pd.concat([old_df, df], ignore_index=True)
 
-        final_df.to_excel("mood_responses_speedometer.xlsx", index=False)
-
-        # Success animation
-        st.success("🎉 Mood submitted successfully! 🎉")
+        df.to_excel("mood_data.xlsx", index=False)
+        st.success("✅ Mood submitted successfully!")
         st.balloons()
